@@ -42,28 +42,6 @@ app.use("/api/fetchMessages", fetchMessagesRoutes);
 app.use("/api/auto-responses", autoResponsesRoutes);
 app.use("/api/ai", aiRouter);
 
-function getAdminId() {
-  return new Promise((resolve, reject) => {
-    db.query("SELECT id FROM users WHERE role='admin' LIMIT 1", (err, rows) => {
-      if (err) return reject(err);
-      resolve(rows.length > 0 ? rows[0].id : null);
-    });
-  });
-}
-
-function sendAutoResponseIfExists(originalMessage, senderId, receiverId) {
-  return new Promise((resolve) => {
-    const sql = "SELECT response FROM auto_responses WHERE question = ? LIMIT 1";
-    db.query(sql, [originalMessage], (err, rows) => {
-      if (err || !rows || rows.length === 0) return resolve();
-      const reply = rows[0].response;
-      const insertSql =
-        "INSERT INTO messages (sender_id, receiver_id, message, created_at) VALUES (?, ?, ?, NOW())";
-      db.query(insertSql, [receiverId, senderId, reply], () => resolve());
-    });
-  });
-}
-
 const adminAuth = (req, res, next) => {
   const userHeader = req.headers["user"];
   if (!userHeader) return res.status(401).json({ message: "Unauthorized" });
@@ -88,9 +66,9 @@ app.post("/api/signup", (req, res) => {
     db.query(
       "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
       [username, password, role],
-      (err2) => {
+      (err2, result) => {
         if (err2) return res.status(500).json({ message: "Failed to register user" });
-        res.json({ message: "User registered successfully" });
+        res.json({ message: "User registered successfully", id: result.insertId });
       }
     );
   });
@@ -140,27 +118,18 @@ app.get("/api/auto-responses", adminAuth, (req, res) => {
   });
 });
 
-app.get("/api/session", (req, res) => {
-  const adminQuery = "SELECT id, username, role FROM users WHERE role = 'admin' LIMIT 1";
-  req.db.query(adminQuery, (err, result) => {
-    if (err) return res.status(500).json({ message: "Database error" });
-    if (result.length === 0) return res.json({});
-    const admin = result[0];
-    res.json({ id: admin.id, username: admin.username, role: admin.role });
-  });
-});
-
 app.post("/api/auto-responses", adminAuth, (req, res) => {
   const { question, response } = req.body;
-  if (!question || !response)
-    return res.status(400).json({ message: "Missing fields" });
+  if (!question || !response) return res.status(400).json({ message: "Missing fields" });
 
-  const sql =
-    "INSERT INTO auto_responses (question, response) VALUES (?, ?) ON DUPLICATE KEY UPDATE response=?";
-  db.query(sql, [question, response, response], (err) => {
-    if (err) return res.status(500).json({ message: err.message });
-    res.json({ message: "Response saved" });
-  });
+  db.query(
+    "INSERT INTO auto_responses (question, response) VALUES (?, ?) ON DUPLICATE KEY UPDATE response=?",
+    [question, response, response],
+    (err) => {
+      if (err) return res.status(500).json({ message: err.message });
+      res.json({ message: "Response saved" });
+    }
+  );
 });
 
 app.put("/api/auto-responses/:id", adminAuth, (req, res) => {
@@ -219,20 +188,6 @@ app.delete("/api/users/:id", adminAuth, (req, res) => {
   });
 });
 
-app.get("/api/users/search", (req, res) => {
-  const { query } = req.query;
-  if (!query) return res.status(400).json({ message: "Missing search query" });
-
-  db.query(
-    "SELECT id, username, role, last_activity, created_at FROM users WHERE username LIKE ? ORDER BY created_at DESC",
-    [`%${query}%`],
-    (err, results) => {
-      if (err) return res.status(500).json({ message: err.message });
-      res.json(results);
-    }
-  );
-});
-
 app.post("/api/logout", (req, res) => {
   const { username } = req.body;
   db.query("UPDATE users SET is_online = 0 WHERE username = ?", [username], (err) => {
@@ -243,25 +198,15 @@ app.post("/api/logout", (req, res) => {
 
 app.post("/api/messages", (req, res) => {
   const { sender_id, message } = req.body;
-  if (!sender_id || !message) {
-    return res.status(400).json({ message: "sender_id and message required" });
-  }
+  if (!sender_id || !message) return res.status(400).json({ message: "sender_id and message required" });
 
   db.query("SELECT id FROM users WHERE role='admin' ORDER BY id ASC LIMIT 1", (err, result) => {
-    if (err) {
-      return res.status(500).json({ message: "Database error" });
-    }
-
-    if (result.length === 0) {
-      return res.status(404).json({ message: "No admin found" });
-    }
+    if (err) return res.status(500).json({ message: "Database error" });
+    if (result.length === 0) return res.status(404).json({ message: "No admin found" });
 
     const receiver_id = result[0].id;
-    const sql = "INSERT INTO messages (sender_id, receiver_id, message) VALUES (?, ?, ?)";
-    db.query(sql, [sender_id, receiver_id, message], (err2, insertResult) => {
-      if (err2) {
-        return res.status(500).json({ message: "Failed to send message" });
-      }
+    db.query("INSERT INTO messages (sender_id, receiver_id, message) VALUES (?, ?, ?)", [sender_id, receiver_id, message], (err2) => {
+      if (err2) return res.status(500).json({ message: "Failed to send message" });
       res.json({ success: true, message: "Message stored successfully" });
     });
   });
@@ -271,9 +216,7 @@ app.get("/api/fetchMessages", async (req, res) => {
   let { sender_id, receiver_id } = req.query;
   sender_id = Number(sender_id);
   receiver_id = Number(receiver_id);
-  if (isNaN(sender_id) || isNaN(receiver_id)) {
-    return res.status(400).json({ error: "Invalid sender_id or receiver_id" });
-  }
+  if (isNaN(sender_id) || isNaN(receiver_id)) return res.status(400).json({ error: "Invalid sender_id or receiver_id" });
 
   const sql = `
     SELECT 
@@ -293,10 +236,8 @@ app.get("/api/fetchMessages", async (req, res) => {
       OR (m.sender_id = ? AND m.receiver_id = ?)
     ORDER BY m.created_at ASC
   `;
-
-  const params = [sender_id, receiver_id, receiver_id, sender_id];
   try {
-    const [rows] = await db.promise().query(sql, params);
+    const [rows] = await db.promise().query(sql, [sender_id, receiver_id, receiver_id, sender_id]);
     res.json(rows);
   } catch (err) {
     res.status(500).json({ error: "Database error" });
@@ -304,5 +245,5 @@ app.get("/api/fetchMessages", async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`✅ You entered the Cordi Chatbot!`);
+  console.log(`✅ Cordi Chatbot backend running on port ${PORT}`);
 });

@@ -12,26 +12,44 @@ export default function SignIn() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!username || !password) {
+      setError("Please enter both username and password.");
+      return;
+    }
+
     try {
       const response = await axios.post("http://localhost:5000/api/signin", {
         username,
         password,
       });
 
-      const { role } = response.data;
-      localStorage.setItem("user", JSON.stringify({ username, role }));
+      if (response.data && response.data.role) {
+        const { role } = response.data;
+        localStorage.setItem("user", JSON.stringify({ username, role }));
 
-      if (role === "admin") navigate("/adminDashboard");
-      else if (role === "student") navigate("/StudentChat");
-      else if (role === "guest") navigate("/guestDashboard");
-      else setError("Unknown role.");
+        if (role.toLowerCase() === "admin") navigate("/admindashboard");
+        else if (role.toLowerCase() === "student") navigate("/studentchat");
+        else if (role.toLowerCase() === "guest") navigate("/guestdashboard");
+        else setError("Unknown role received from server.");
+      } else {
+        setError("Invalid server response. Please try again.");
+      }
     } catch (err) {
-      setError(err.response?.data?.message || "Signin failed.");
+      console.error("Signin error:", err.response || err);
+
+      if (err.response?.status === 401) {
+        setError(err.response.data?.message || "Invalid credentials.");
+      } else if (err.response?.data?.message) {
+        setError(err.response.data.message);
+      } else {
+        setError("Signin failed. Check server connection.");
+      }
     }
   };
 
   const handleGifClick = () => {
-    navigate("/home");
+    navigate("/chatai");
   };
 
   return (

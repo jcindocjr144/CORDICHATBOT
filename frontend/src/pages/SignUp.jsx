@@ -38,7 +38,7 @@ export default function SignUp() {
   };
 
   const handleGifClick = () => {
-    navigate("/home");
+    navigate("/ChatAi");
   };
 
   return (

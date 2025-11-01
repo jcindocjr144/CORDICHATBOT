@@ -4,7 +4,7 @@ export default function LandingPage() {
   const navigate = useNavigate();
 
   const handleGetStarted = () => {
-    navigate("/signin");
+    navigate("/ChatAi");
   };
 
   const handleSignIn = () => {
@@ -25,10 +25,8 @@ export default function LandingPage() {
         backgroundRepeat: "no-repeat",
       }}
     >
-      {/* Overlay for better readability */}
       <div className="absolute inset-0 bg-black bg-opacity-50"></div>
 
-      {/* Top-right Sign In / Sign Up buttons */}
       <div className="absolute top-4 right-4 flex gap-4 z-20">
         <button
           onClick={handleSignIn}
@@ -44,7 +42,6 @@ export default function LandingPage() {
         </button>
       </div>
 
-      {/* Content */}
       <div className="relative z-10 flex flex-col items-center justify-center max-w-2xl">
         <h1 className="text-4xl md:text-6xl font-bold mb-4">
           Welcome to CORDI CHATBOT
@@ -53,8 +50,6 @@ export default function LandingPage() {
           Experience smarter communication with our AI-powered chatbot project. 
           Chat instantly, get answers, and stay connected 24/7!
         </p>
-
-        {/* Get Started Button */}
         <button
           onClick={handleGetStarted}
           className="px-8 py-4 bg-blue-600 text-white text-xl rounded-full shadow-lg hover:bg-blue-700 transition duration-300"

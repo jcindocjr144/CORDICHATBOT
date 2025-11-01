@@ -34,7 +34,7 @@ router.post("/", async (req, res) => {
 
     res.json({ message: "User registered successfully." });
   } catch (err) {
-    console.error("Error during signup:", err);
+    console.error(err);
     res.status(500).json({ message: "Database error during signup." });
   }
 });
