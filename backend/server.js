@@ -1,24 +1,23 @@
 import express from "express";
 import cors from "cors";
-import bodyParser from "body-parser";
 import mysql from "mysql2";
 import dotenv from "dotenv";
 
 import signupRoutes from "./routes/signup.js";
 import messagesRoutes from "./routes/messages.js";
-import studentMessagesRoutes from "./routes/studentMessages.js";
-import guestMessages from "./routes/guestMessages.js";
+import userMessages from "./routes/userMessages.js";
 import fetchMessagesRoutes from "./routes/fetchMessages.js";
 import autoResponsesRoutes from "./routes/autoResponses.js";
 import aiRouter from "./routes/ai.js";
-
+import authRoutes from "./routes/auth.js";
 dotenv.config();
 
 const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 const PORT = process.env.PORT || 5000;
 
 app.use(cors({ origin: true }));
-app.use(bodyParser.json());
 
 const db = mysql.createPool({
   host: process.env.DB_HOST || "localhost",
@@ -36,11 +35,11 @@ app.use((req, res, next) => {
 
 app.use("/api/signup", signupRoutes);
 app.use("/api/messages", messagesRoutes);
-app.use("/api/studentMessages", studentMessagesRoutes);
-app.use("/api/guestMessages", guestMessages);
+app.use("/api/userMessages", userMessages);
 app.use("/api/fetchMessages", fetchMessagesRoutes);
 app.use("/api/auto-responses", autoResponsesRoutes);
 app.use("/api/ai", aiRouter);
+app.use("/api/auth", authRoutes);
 
 const adminAuth = (req, res, next) => {
   const userHeader = req.headers["user"];

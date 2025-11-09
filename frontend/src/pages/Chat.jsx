@@ -123,7 +123,6 @@ export default function Chat() {
           className="w-full mb-3 px-3 py-2 border rounded text-black focus:outline-none focus:ring focus:ring-blue-300"
         />
 
-        {/* Contact list (toggle on mobile) */}
         <ul
           className={`transition-all duration-300 ease-in-out ${
             showContacts ? "max-h-screen opacity-100" : "max-h-0 opacity-0 md:opacity-100 md:max-h-full"
@@ -156,7 +155,6 @@ export default function Chat() {
         </ul>
       </div>
 
-      {/* Chatbox */}
       <div className="flex-1 flex flex-col relative h-screen bg-gray-50 bg-[url('/logo.png')] bg-center bg-no-repeat bg-contain bg-opacity-30">
         {selectedUser && (
           <>

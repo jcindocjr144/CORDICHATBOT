@@ -19,21 +19,21 @@ export default function SignIn() {
     }
 
     try {
-      const response = await axios.post("http://localhost:5000/api/signin", {
+      const response = await axios.post("http://localhost:5000/api/auth/signin", {
         username,
         password,
       });
 
-      if (response.data && response.data.role) {
-        const { role } = response.data;
-        localStorage.setItem("user", JSON.stringify({ username, role }));
+      if (response.data?.success) {
+        const { id, username, role } = response.data;
+        localStorage.setItem("user", JSON.stringify({ id, username, role }));
 
         if (role.toLowerCase() === "admin") navigate("/admindashboard");
         else if (role.toLowerCase() === "student") navigate("/studentchat");
-        else if (role.toLowerCase() === "guest") navigate("/guestdashboard");
+        else if (role.toLowerCase() === "guest") navigate("/guestchat");
         else setError("Unknown role received from server.");
       } else {
-        setError("Invalid server response. Please try again.");
+        setError(response.data.message || "Invalid server response");
       }
     } catch (err) {
       console.error("Signin error:", err.response || err);
@@ -48,9 +48,7 @@ export default function SignIn() {
     }
   };
 
-  const handleGifClick = () => {
-    navigate("/chatai");
-  };
+  const handleGifClick = () => navigate("/chatai");
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4">

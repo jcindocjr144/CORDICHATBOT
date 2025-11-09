@@ -3,13 +3,13 @@ import SignIn from "./pages/SignIn.jsx";
 import SignUp from "./pages/SignUp.jsx";
 import AdminDashboard from "./pages/AdminDashboard.jsx";
 import StudentChat from "./pages/StudentChat.jsx";
-import GuestDashboard from "./pages/GuestDashboard.jsx";
 import AutoResponses from "./pages/AutoResponses.jsx";
 import Users from "./pages/Users.jsx";
 import Chat from "./pages/Chat.jsx";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import LandingPage from "./pages/LandingPage.jsx";
 import ChatAi from "./pages/ChatAi.jsx";
+import GuestChat from "./pages/GuestChat.jsx";
 
 export default function App() {
   return (
@@ -59,10 +59,10 @@ export default function App() {
         }
       />
       <Route
-        path="/guestdashboard"
+        path="/guestchat"
         element={
           <ProtectedRoute roleRequired="guest">
-            <GuestDashboard />
+            <GuestChat />
           </ProtectedRoute>
         }
       />

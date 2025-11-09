@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 
-export default function StudentChat() {
+export default function GuestChat() {
   const user = JSON.parse(localStorage.getItem("user"));
   const [messages, setMessages] = useState([]);
   const [autoResponses, setAutoResponses] = useState([]);
@@ -108,7 +108,7 @@ export default function StudentChat() {
     <div className="flex flex-col h-screen bg-gray-50 relative">
       {/* Header */}
       <div className="p-4 bg-white shadow flex justify-between items-center z-20">
-        <h1 className="text-lg font-bold">CORDI Chat (Student)</h1>
+        <h1 className="text-lg font-bold">CORDI Chat (Guest)</h1>
         <button
           onClick={handleLogout}
           className="bg-gray-700 text-white px-3 py-1 rounded hover:bg-gray-800"
@@ -125,10 +125,10 @@ export default function StudentChat() {
           backgroundSize: "contain",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
-          paddingBottom: "160px", 
+          paddingBottom: "160px",
         }}
       >
-        <div className="absolute inset-0"></div>
+        <div className="absolute inset-0 "></div>
         <div className="relative z-10 space-y-3">
           {messages.map((msg, i) => (
             <div
@@ -197,7 +197,7 @@ export default function StudentChat() {
         />
         <button
           type="submit"
-          className="ml-2 bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700"
+          className="ml-2 bg-green-600 text-white px-4 py-2 rounded-full hover:bg-green-700"
         >
           Send
         </button>

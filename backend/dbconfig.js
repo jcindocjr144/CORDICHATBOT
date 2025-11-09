@@ -1,10 +1,13 @@
-import mysql from "mysql2/promise";
+import mysql from "mysql2";
 
-const pool = mysql.createPool({
+const db = mysql.createPool({
   host: "localhost",
   user: "root",
   password: "",
   database: "chatbotdb",
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
 });
 
-export default pool;
+export default db.promise(); 
